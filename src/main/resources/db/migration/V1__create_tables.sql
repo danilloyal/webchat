@@ -1,0 +1,50 @@
+CREATE TABLE IF NOT EXISTS users (
+    id BIGINT PRIMARY KEY,
+    username VARCHAR(50) NOT NULL,
+    email VARCHAR(255) NOT NULL UNIQUE,
+    password_hash VARCHAR(255) NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS servers (
+    id BIGINT PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    owner_id BIGINT NOT NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    
+    CONSTRAINT fk_server_owner 
+        FOREIGN KEY (owner_id) 
+        REFERENCES users(id) 
+        ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS channels (
+    id BIGINT PRIMARY KEY,
+    server_id BIGINT NOT NULL,
+    name VARCHAR(100) NOT NULL,
+    type VARCHAR(10) NOT NULL CHECK (type IN ('text', 'voice')),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    
+    CONSTRAINT fk_channel_server 
+        FOREIGN KEY (server_id) 
+        REFERENCES servers(id) 
+        ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS server_members (
+    user_id BIGINT NOT NULL,
+    server_id BIGINT NOT NULL,
+    joined_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    
+    PRIMARY KEY (user_id, server_id),
+    
+    CONSTRAINT fk_server_member_user 
+        FOREIGN KEY (user_id) 
+        REFERENCES users(id) 
+        ON DELETE CASCADE,
+        
+    CONSTRAINT fk_server_member_server 
+        FOREIGN KEY (server_id) 
+        REFERENCES servers(id) 
+        ON DELETE CASCADE
+);
