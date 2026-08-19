@@ -1,0 +1,38 @@
+services:
+  
+  postgres-db:
+    image: postgres:16-alpine 
+    container_name: spring_postgres_local
+    environment:
+      POSTGRES_DB: ${DB_NAME}         
+      POSTGRES_USER: ${DB_USERNAME}    
+      POSTGRES_PASSWORD: ${DB_PASSWORD} 
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - spring-network
+
+  api-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: spring_app_local
+    ports:
+      - "8080:8080"
+    environment:
+
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres-db:5432/${DB_NAME}
+      SPRING_DATASOURCE_USERNAME: ${DB_USERNAME}
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
+    depends_on:
+      - postgres-db
+    networks:
+      - spring-network
+
+volumes:
+  postgres_data:
+
+networks:
+  spring-network:

@@ -1,0 +1,48 @@
+name: Java CI/CD with Docker
+
+on:
+  push:
+    branches: 
+      - "main"
+      - "release/**"
+  pull_request:
+    branches: 
+      - "main"
+      - "release/**"
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up JDK 17 (Temurin Alpine)
+      uses: actions/setup-java@v4
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+        cache: 'maven'
+
+    - name: Build and Test with Maven
+      run: ./mvnw clean verify
+
+  build-docker-image:
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v4
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+
+    - name: Build Docker Image
+      uses: docker/build-push-action@v6
+      with:
+        context: .
+        file: ./Dockerfile
+        push: false
+        tags: minha-app-spring:${{ github.sha }}
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
